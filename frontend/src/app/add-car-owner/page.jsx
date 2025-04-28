@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { addCarOwner } from '../../../utils/api';
+import { useRouter } from 'next/navigation';
 
 export default function AddCarOwnerPage() {
   const [formData, setFormData] = useState({
@@ -9,7 +10,7 @@ export default function AddCarOwnerPage() {
     number_plate: '',
     car_type: '',
     phone_number: '',
-  });
+  }); 
 
   const handleChange = (e) => {
     setFormData({
@@ -34,6 +35,11 @@ export default function AddCarOwnerPage() {
       alert('Failed to add car owner');
     }
   };
+  const router = useRouter();
+
+  function handleGoToShowAllCars() {
+    router.push('/show-all-cars');
+  }
 
   return (
     <div>
@@ -79,6 +85,14 @@ export default function AddCarOwnerPage() {
           Add Car Owner
         </button>
       </form>
+
+      <button 
+        onClick={handleGoToShowAllCars}
+        className="mb-6 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Show all cars
+      </button>
+      
     </div>
   );
 }
