@@ -25,6 +25,11 @@ export default function ShowAllCarsPage() {
 
         }, []);
 
+        function handleRowClick(id) {
+            router.push(`/car-owners/${id}`); // Navigate to the car owner details page
+        }
+
+
         function handleGoToAddCarOwner() {
             router.push('/add-car-owner');
           }
@@ -52,7 +57,9 @@ export default function ShowAllCarsPage() {
                 </thead>
                 <tbody>
                   {carOwners.map((owner) => (
-                    <tr key={owner.id}>
+                    <tr key={owner.id}
+                      onClick={() => handleRowClick(owner.id)}
+                      className="cursor-pointer hover:bg-gray-700">
                       <td style={{ border: '1px solid white', padding: '8px' }}>{owner.name}</td>
                       <td style={{ border: '1px solid white', padding: '8px' }}>{owner.number_plate}</td>
                       <td style={{ border: '1px solid white', padding: '8px' }}>{owner.car_type}</td>
