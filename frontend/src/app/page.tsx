@@ -1,103 +1,169 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useEffect, useState } from 'react';
+import toast, { Toaster } from 'react-hot-toast'; // ✅ import toast
+import { Dialog } from '@headlessui/react'; // ✅ for modal (if you don't want Tailwind UI, I can show simple div modal)
+
+interface CarOwner {
+  id: number;
+  name: string;
+  number_plate: string;
+  car_type: string;
+  phone_number: string;
+  check_in_time: string;
+}
+
+export default function CarsPage() {
+  const [carOwners, setCarOwners] = useState<CarOwner[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedOwner, setSelectedOwner] = useState<CarOwner | null>(null);
+
+  useEffect(() => {
+    fetchCarOwners();
+  }, []);
+
+  const fetchCarOwners = async () => {
+    try {
+      const res = await fetch('http://127.0.0.1:8000/car-owners/');
+      const data = await res.json();
+      setCarOwners(data);
+    } catch (error) {
+      console.error('Error fetching car owners:', error);
+      toast.error('Failed to fetch car owners!');
+    }
+  };
+
+  const openModal = (owner: CarOwner) => {
+    setSelectedOwner(owner);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedOwner(null);
+  };
+
+  const updateOwner = async () => {
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/car-owners/${selectedOwner?.id}/`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(selectedOwner),
+      });
+
+      if (response.ok) {
+        toast.success('Car info updated successfully! 🚗✅');
+        fetchCarOwners();
+        closeModal();
+      } else {
+        toast.error('Failed to update car info ❌');
+      }
+    } catch (error) {
+      console.error('Error updating car owner:', error);
+      toast.error('An unexpected error occurred ⚡');
+    }
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen bg-gray-100 p-8">
+      <Toaster /> {/* ✅ Toast messages container */}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      <h1 className="text-3xl font-bold mb-8 text-start text-gray-800">Parking List</h1>
+
+      <div className="overflow-x-auto rounded-lg shadow">
+        <table className="min-w-full bg-white">
+          <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+            <tr>
+              <th className="py-3 px-6 text-left">Name</th>
+              <th className="py-3 px-6 text-left">Number Plate</th>
+              <th className="py-3 px-6 text-left">Type of Car</th>
+              <th className="py-3 px-6 text-left">Phone Number</th>
+              <th className="py-3 px-6 text-left">Check-in Time</th>
+              <th className="py-3 px-6 text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="text-gray-600 text-sm font-light">
+            {carOwners.map((owner) => (
+              <tr key={owner.id} className="border-b border-gray-200 hover:bg-gray-100">
+                <td className="py-3 px-6 text-left">{owner.name}</td>
+                <td className="py-3 px-6 text-left">{owner.number_plate}</td>
+                <td className="py-3 px-6 text-left">{owner.car_type}</td>
+                <td className="py-3 px-6 text-left">{owner.phone_number}</td>
+                <td className="py-3 px-6 text-left">
+                  {owner.check_in_time ? new Date(owner.check_in_time).toLocaleString() : 'N/A'}
+                </td>
+                <td className="py-3 px-6 text-center">
+                  <button
+                    className="bg-blue-500 text-white py-1 px-3 rounded-lg hover:bg-blue-600 transition"
+                    onClick={() => openModal(owner)}
+                  >
+                    Update
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Modal */}
+      <Dialog open={isModalOpen} onClose={closeModal} className="relative z-50">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" aria-hidden="true" />
+
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <Dialog.Panel className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
+            <Dialog.Title className="text-lg font-bold mb-4">Edit Car Owner</Dialog.Title>
+
+            <div className="space-y-4">
+              <input
+                type="text"
+                placeholder="Name"
+                className="w-full border p-2 rounded"
+                value={selectedOwner?.name || ''}
+                onChange={(e) => setSelectedOwner({ ...selectedOwner!, name: e.target.value })}
+              />
+              <input
+                type="text"
+                placeholder="Number Plate"
+                className="w-full border p-2 rounded"
+                value={selectedOwner?.number_plate || ''}
+                onChange={(e) => setSelectedOwner({ ...selectedOwner!, number_plate: e.target.value })}
+              />
+              <input
+                type="text"
+                placeholder="Type of Car"
+                className="w-full border p-2 rounded"
+                value={selectedOwner?.car_type || ''}
+                onChange={(e) => setSelectedOwner({ ...selectedOwner!, car_type: e.target.value })}
+              />
+              <input
+                type="text"
+                placeholder="Phone Number"
+                className="w-full border p-2 rounded"
+                value={selectedOwner?.phone_number || ''}
+                onChange={(e) => setSelectedOwner({ ...selectedOwner!, phone_number: e.target.value })}
+              />
+
+              <div className="flex gap-2 mt-4">
+                <button
+                  className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                  onClick={updateOwner}
+                >
+                  Save
+                </button>
+                <button
+                  className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                  onClick={closeModal}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </Dialog.Panel>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </Dialog>
     </div>
   );
 }
