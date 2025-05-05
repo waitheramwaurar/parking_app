@@ -18,10 +18,11 @@ export default function CarsPage() {
   const [carOwners, setCarOwners] = useState<CarOwner[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOwner, setSelectedOwner] = useState<CarOwner | null>(null);
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
 
   useEffect(() => {
     fetchCarOwners();
-    const interval = setInterval(fetchCarOwners, 60000);
+    const interval = setInterval(fetchCarOwners, 60000); // refresh every minute
     return () => clearInterval(interval);
   }, []);
 
@@ -85,6 +86,14 @@ export default function CarsPage() {
     return `${hours * 100} KES`;
   };
 
+  const getDuration = (checkIn: string): string => {
+    const ms = new Date().getTime() - new Date(checkIn).getTime();
+    const totalMinutes = Math.floor(ms / (1000 * 60));
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return `${hours}h ${minutes}m`;
+  };
+
   const openModal = (owner: CarOwner) => {
     setSelectedOwner(owner);
     setIsModalOpen(true);
@@ -99,7 +108,6 @@ export default function CarsPage() {
     <div className="min-h-screen bg-gray-100 p-8">
       <Toaster />
 
-      {/* Header with Title and Add Button */}
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-800">Parking List</h1>
         <button
@@ -154,7 +162,10 @@ export default function CarsPage() {
                   </button>
                   {!owner.checked_out && (
                     <button
-                      onClick={() => checkoutOwner(owner.id)}
+                      onClick={() => {
+                        setSelectedOwner(owner);
+                        setIsCheckoutModalOpen(true);
+                      }}
                       className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
                     >
                       Checkout
@@ -167,7 +178,7 @@ export default function CarsPage() {
         </table>
       </div>
 
-      {/* Modal */}
+      {/* Owner Edit Modal */}
       <Dialog open={isModalOpen} onClose={closeModal} className="relative z-50">
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center p-4">
@@ -226,6 +237,45 @@ export default function CarsPage() {
                   Cancel
                 </button>
               </div>
+            </div>
+          </Dialog.Panel>
+        </div>
+      </Dialog>
+
+      {/* Checkout Confirmation Modal */}
+      <Dialog open={isCheckoutModalOpen} onClose={() => setIsCheckoutModalOpen(false)} className="relative z-50">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" aria-hidden="true" />
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <Dialog.Panel className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
+            <Dialog.Title className="text-lg font-bold mb-4">Confirm Checkout</Dialog.Title>
+            <div className="space-y-2">
+              <p><strong>Name:</strong> {selectedOwner?.name}</p>
+              <p><strong>Number Plate:</strong> {selectedOwner?.number_plate}</p>
+              <p><strong>Type:</strong> {selectedOwner?.car_type}</p>
+              <p><strong>Phone:</strong> {selectedOwner?.phone_number}</p>
+              <p><strong>Check-In:</strong> {new Date(selectedOwner?.check_in_time || '').toLocaleString()}</p>
+              <p><strong>Duration:</strong> {getDuration(selectedOwner?.check_in_time || '')}</p>
+              <p><strong>Current Cost:</strong> {getCost(selectedOwner?.check_in_time || '', false)}</p>
+            </div>
+            <div className="flex justify-end gap-2 mt-6">
+              <button
+                onClick={async () => {
+                  if (selectedOwner) {
+                    await checkoutOwner(selectedOwner.id);
+                    setIsCheckoutModalOpen(false);
+                    setSelectedOwner(null);
+                  }
+                }}
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              >
+                Confirm Checkout
+              </button>
+              <button
+                onClick={() => setIsCheckoutModalOpen(false)}
+                className="bg-gray-400 text-white px-4 py-2 rounded"
+              >
+                Cancel
+              </button>
             </div>
           </Dialog.Panel>
         </div>
