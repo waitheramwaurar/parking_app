@@ -16,13 +16,14 @@ interface CarOwner {
 
 export default function CarsPage() {
   const [carOwners, setCarOwners] = useState<CarOwner[]>([]);
+  const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOwner, setSelectedOwner] = useState<CarOwner | null>(null);
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
 
   useEffect(() => {
     fetchCarOwners();
-    const interval = setInterval(fetchCarOwners, 60000); // refresh every minute
+    const interval = setInterval(fetchCarOwners, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -31,20 +32,19 @@ export default function CarsPage() {
       const res = await fetch('http://127.0.0.1:8000/car-owners/');
       const data = await res.json();
       setCarOwners(data);
-    } catch (error) {
+    } catch {
       toast.error('Failed to fetch car owners!');
     }
   };
 
   const saveOwner = async () => {
+    const isNew = selectedOwner?.id === '';
+    const url = isNew
+      ? 'http://127.0.0.1:8000/car-owners/'
+      : `http://127.0.0.1:8000/car-owners/${selectedOwner?.id}/`;
+    const method = isNew ? 'POST' : 'PUT';
+
     try {
-      const isNew = selectedOwner?.id === '';
-      const url = isNew
-        ? 'http://127.0.0.1:8000/car-owners/'
-        : `http://127.0.0.1:8000/car-owners/${selectedOwner?.id}/`;
-
-      const method = isNew ? 'POST' : 'PUT';
-
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -59,7 +59,7 @@ export default function CarsPage() {
         toast.error(`${isNew ? 'Creation' : 'Update'} failed`);
       }
     } catch {
-      toast.error(`Error ${selectedOwner?.id ? 'updating' : 'creating'} car owner`);
+      toast.error('Network error during save');
     }
   };
 
@@ -104,56 +104,69 @@ export default function CarsPage() {
     setSelectedOwner(null);
   };
 
+  const filteredOwners = carOwners.filter(owner =>
+    owner.number_plate.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
+    <div className="min-h-screen bg-gray-100 p-4 sm:p-8">
       <Toaster />
 
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-800">Parking List</h1>
-        <button
-          onClick={() => {
-            setSelectedOwner({
-              id: '',
-              name: '',
-              number_plate: '',
-              car_type: '',
-              phone_number: '',
-              check_in_time: new Date().toISOString(),
-              checked_out: false,
-            });
-            setIsModalOpen(true);
-          }}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-        >
-          + New Car Owner
-        </button>
+      <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center mb-6 gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Parking List</h1>
+        <div className="w-full sm:w-auto flex gap-2 flex-col sm:flex-row">
+          <input
+            type="text"
+            placeholder="Search by Number Plate"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="border p-2 rounded w-full sm:w-64"
+          />
+          <button
+            onClick={() => {
+              setSelectedOwner({
+                id: '',
+                name: '',
+                number_plate: '',
+                car_type: '',
+                phone_number: '',
+                check_in_time: new Date().toISOString(),
+                checked_out: false,
+              });
+              setIsModalOpen(true);
+            }}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          >
+            + Add Car
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto rounded-lg shadow">
-        <table className="min-w-full bg-white">
-          <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+        <table className="min-w-full bg-white text-sm sm:text-base">
+          <thead className="bg-gray-200 text-gray-600 uppercase">
             <tr>
-              <th className="py-3 px-6 text-left">Name</th>
-              <th className="py-3 px-6 text-left">Number Plate</th>
-              <th className="py-3 px-6 text-left">Type</th>
-              <th className="py-3 px-6 text-left">Phone</th>
-              <th className="py-3 px-6 text-left">Check-In</th>
-              <th className="py-3 px-6 text-left">Cost</th>
-              <th className="py-3 px-6 text-center">Actions</th>
+              <th className="py-2 px-3 text-left">Name</th>
+              <th className="py-2 px-3 text-left">Plate</th>
+              <th className="py-2 px-3 text-left">Type</th>
+              <th className="py-2 px-3 text-left">Phone</th>
+              <th className="py-2 px-3 text-left">Check-In</th>
+              <th className="py-2 px-3 text-left">Cost</th>
+              <th className="py-2 px-3 text-center">Actions</th>
             </tr>
           </thead>
-          <tbody className="text-gray-600 text-sm font-light">
-            {carOwners.map(owner => (
-              <tr key={owner.id} className="border-b border-gray-200 hover:bg-gray-100">
-                <td className="py-3 px-6 text-left">{owner.name}</td>
-                <td className="py-3 px-6 text-left">{owner.number_plate}</td>
-                <td className="py-3 px-6 text-left">{owner.car_type}</td>
-                <td className="py-3 px-6 text-left">{owner.phone_number}</td>
-                <td className="py-3 px-6 text-left">
+          <tbody className="text-gray-700">
+            {filteredOwners.map(owner => (
+              <tr key={owner.id} className="border-t hover:bg-gray-100">
+                <td className="py-2 px-3">{owner.name}</td>
+                <td className="py-2 px-3">{owner.number_plate}</td>
+                <td className="py-2 px-3">{owner.car_type}</td>
+                <td className="py-2 px-3">{owner.phone_number}</td>
+                <td className="py-2 px-3">
                   {new Date(owner.check_in_time).toLocaleString()}
                 </td>
-                <td className="py-3 px-6 text-left">{getCost(owner.check_in_time, owner.checked_out)}</td>
-                <td className="py-3 px-6 text-center space-x-2">
+                <td className="py-2 px-3">{getCost(owner.check_in_time, owner.checked_out)}</td>
+                <td className="py-2 px-3 text-center flex flex-wrap justify-center gap-2">
                   <button
                     onClick={() => openModal(owner)}
                     className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
@@ -178,7 +191,8 @@ export default function CarsPage() {
         </table>
       </div>
 
-      {/* Owner Edit Modal */}
+      {/* Modal Components (Same as before) */}
+      {/* Edit Modal */}
       <Dialog open={isModalOpen} onClose={closeModal} className="relative z-50">
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center p-4">
@@ -242,7 +256,7 @@ export default function CarsPage() {
         </div>
       </Dialog>
 
-      {/* Checkout Confirmation Modal */}
+      {/* Checkout Modal */}
       <Dialog open={isCheckoutModalOpen} onClose={() => setIsCheckoutModalOpen(false)} className="relative z-50">
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center p-4">
@@ -250,12 +264,9 @@ export default function CarsPage() {
             <Dialog.Title className="text-lg font-bold mb-4">Confirm Checkout</Dialog.Title>
             <div className="space-y-2">
               <p><strong>Name:</strong> {selectedOwner?.name}</p>
-              <p><strong>Number Plate:</strong> {selectedOwner?.number_plate}</p>
-              <p><strong>Type:</strong> {selectedOwner?.car_type}</p>
-              <p><strong>Phone:</strong> {selectedOwner?.phone_number}</p>
-              <p><strong>Check-In:</strong> {new Date(selectedOwner?.check_in_time || '').toLocaleString()}</p>
+              <p><strong>Plate:</strong> {selectedOwner?.number_plate}</p>
               <p><strong>Duration:</strong> {getDuration(selectedOwner?.check_in_time || '')}</p>
-              <p><strong>Current Cost:</strong> {getCost(selectedOwner?.check_in_time || '', false)}</p>
+              <p><strong>Cost:</strong> {getCost(selectedOwner?.check_in_time || '', false)}</p>
             </div>
             <div className="flex justify-end gap-2 mt-6">
               <button
@@ -268,7 +279,7 @@ export default function CarsPage() {
                 }}
                 className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
               >
-                Confirm Checkout
+                Confirm
               </button>
               <button
                 onClick={() => setIsCheckoutModalOpen(false)}
