@@ -126,7 +126,7 @@ export default function CarsPage() {
     if (checkedOut) return 'Finalized';
     const diffMs = new Date().getTime() - new Date(checkIn).getTime();
     const hours = Math.ceil(diffMs / (1000 * 60 * 60));
-    return `${hours * 100} KES`;
+    return `${hours * 50} KES`;
   };
 
   const openModal = (owner: CarOwner) => {
@@ -148,13 +148,13 @@ export default function CarsPage() {
       <Toaster />
 
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-        <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">Parking List</h1>
+        <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">Cars in Parking</h1>
         <input
           type="text"
           placeholder="Search by plate"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="border border-black text-black p-2 rounded w-full sm:w-auto"
+          className="border border-green-800 text-black p-2 rounded w-full sm:w-auto"
         />
         <button
           onClick={() => {
@@ -169,7 +169,7 @@ export default function CarsPage() {
             });
             setIsModalOpen(true);
           }}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          className="bg-green-800 text-white px-4 py-2 rounded hover:bg-green-700"
         >
           + New Car Owner
         </button>
@@ -177,48 +177,50 @@ export default function CarsPage() {
 
       <div className="overflow-x-auto rounded-lg shadow">
         <table className="min-w-full bg-white">
-          <thead className="bg-gray-200 text-gray-600 uppercase">
+          <thead className="bg-green-800 text-white uppercase">
             <tr>
               <th className="py-2 px-4 text-left">Name</th>
               <th className="py-2 px-4 text-left">Number Plate</th>
-              <th className="py-2 px-4 text-left">Type</th>
-              <th className="py-2 px-4 text-left">Phone</th>
-              <th className="py-2 px-4 text-left">Check-In</th>
-              <th className="py-2 px-4 text-left">Duration</th>
-              <th className="py-2 px-4 text-left">Cost</th>
+              <th className="hidden sm:table-cell py-2 px-4 text-left">Type</th>
+              <th className="hidden sm:table-cell py-2 px-4 text-left">Phone</th>
+              <th className="hidden sm:table-cell py-2 px-4 text-left">Check-In</th>
+              <th className="hidden sm:table-cell py-2 px-4 text-left">Duration</th>
+              <th className="hidden sm:table-cell py-2 px-4 text-left">Cost</th>
               <th className="py-2 px-4 text-center">Actions</th>
             </tr>
           </thead>
-          <tbody className="text-gray-600">
+          <tbody className="text-gray-700">
             {filteredOwners.map(owner => (
-              <tr key={owner.id} className="border-b border-gray-200 hover:bg-gray-100">
+              <tr key={owner.id} className="border-b border-green-800 hover:bg-green-50">
                 <td className="py-2 px-4">{owner.name}</td>
                 <td className="py-2 px-4">{owner.number_plate}</td>
-                <td className="py-2 px-4">{owner.car_type}</td>
-                <td className="py-2 px-4">{owner.phone_number}</td>
-                <td className="py-2 px-4">
+                <td className="hidden sm:table-cell py-2 px-4">{owner.car_type}</td>
+                <td className="hidden sm:table-cell py-2 px-4">{owner.phone_number}</td>
+                <td className="hidden sm:table-cell py-2 px-4">
                   {new Date(owner.check_in_time).toLocaleString()}
                 </td>
-                <td className="py-2 px-4">{getDuration(owner.check_in_time)}</td>
-                <td className="py-2 px-4">{getCost(owner.check_in_time, owner.checked_out)}</td>
+                <td className="hidden sm:table-cell py-2 px-4">{getDuration(owner.check_in_time)}</td>
+                <td className="hidden sm:table-cell py-2 px-4">{getCost(owner.check_in_time, owner.checked_out)}</td>
                 <td className="py-2 px-4 text-center space-x-2">
-                  <button
-                    onClick={() => openModal(owner)}
-                    className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
-                  >
-                    Update
-                  </button>
+                  <div className="flex flex-wrap gap-1">
+                    <button
+                      onClick={() => openModal(owner)}
+                      className="bg-orange-600 text-white px-2 py-1 text-sm sm:text-base sm:px-3 sm:py-2 rounded hover:bg-orange-500"
+                    >
+                      Update
+                    </button>
 
-                  {!owner.checked_out && (
-                  <button
-                    onClick={() => {
-                      checkoutOwner(owner);
-                    }}
-                    className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
-                  >
-                    Checkout
-                  </button>
-                )}
+                    {!owner.checked_out && (
+                      <button
+                        onClick={() => {
+                          checkoutOwner(owner);
+                        }}
+                        className="bg-green-800 text-white px-2 py-1 text-sm sm:text-base sm:px-3 sm:py-2 rounded hover:bg-green-700"
+                      >
+                        Checkout
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -247,10 +249,10 @@ export default function CarsPage() {
                 value={selectedOwner?.phone_number || ''}
                 onChange={e => setSelectedOwner({ ...selectedOwner!, phone_number: e.target.value })} />
               <div className="flex gap-2 justify-end">
-                <button className="bg-green-600 text-white px-4 py-2 rounded" onClick={saveOwner}>
+                <button className="bg-green-800 text-white px-4 py-2 rounded hover:bg-green-700" onClick={saveOwner}>
                   Save
                 </button>
-                <button className="bg-gray-400 text-white px-4 py-2 rounded" onClick={closeModal}>
+                <button className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-400" onClick={closeModal}>
                   Cancel
                 </button>
               </div>
@@ -264,7 +266,7 @@ export default function CarsPage() {
         <Dialog.Panel className="bg-white p-6 rounded shadow-md max-w-md w-full">
           <Dialog.Title className="text-lg text-black font-medium"><strong>Confirm Checkout</strong></Dialog.Title>
             <Dialog.Description className="mt-2 text-sm text-black">
-                Has <strong>{selectedOwnerForCheckout?.name}</strong> – <strong>{selectedOwnerForCheckout?.number_plate}</strong> paid <strong>{getCost(selectedOwnerForCheckout?.check_in_time || '', false)}</strong>?
+                Has <strong>{selectedOwnerForCheckout?.name}</strong>: <strong>{selectedOwnerForCheckout?.number_plate}</strong> paid <strong>{getCost(selectedOwnerForCheckout?.check_in_time || '', false)}</strong>?
             </Dialog.Description>
             <div className="mt-6 flex justify-end gap-2">
               <button
@@ -280,11 +282,10 @@ export default function CarsPage() {
                     await confirmCheckout(selectedOwnerForCheckout.id);
                   }
                 }}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-500"
+                className="px-4 py-2 bg-green-800 text-white rounded hover:bg-green-700"
               >
                 Yes, Checkout
               </button>
-
             </div>
           </Dialog.Panel>
         </div>
