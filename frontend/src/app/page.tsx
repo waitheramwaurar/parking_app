@@ -63,21 +63,56 @@ export default function CarsPage() {
     }
   };
 
-  const checkoutOwner = async (id: string) => {
-    try {
-      const res = await fetch(`http://127.0.0.1:8000/car-owners/${id}/checkout`, {
-        method: 'PATCH',
-      });
-      if (res.ok) {
-        toast.success('Checked out successfully');
-        fetchCarOwners();
-      } else {
-        toast.error('Checkout failed');
-      }
-    } catch {
-      toast.error('Error during checkout');
+  // const checkoutOwner = async (id: string) => {
+  //   try {
+  //     const res = await fetch(`http://127.0.0.1:8000/car-owners/${id}/checkout`, {
+  //       method: 'PATCH',
+  //     });
+  //     if (res.ok) {
+  //       toast.success('Checked out successfully');
+  //       fetchCarOwners();
+  //     } else {
+  //       toast.error('Checkout failed');
+  //     }
+  //   } catch {
+  //     toast.error('Error during checkout');
+  //   }
+  // };
+
+
+  // ----------------------------------------------------------------------------------------------------------------------------------
+  // Modal confirmation
+  // Added by Ruth - confirmation before checkout
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedOwnerForCheckout, setSelectedOwnerForCheckout] = useState<CarOwner | null>(null);
+
+
+  const confirmCheckout = async (id: string) => {
+  try {
+    const res = await fetch(`http://127.0.0.1:8000/car-owners/${id}/checkout`, {
+      method: 'PATCH',
+    });
+    if (res.ok) {
+      toast.success('Checked out successfully');
+      fetchCarOwners();
+    } else {
+      toast.error('Checkout failed');
     }
-  };
+  } catch {
+    toast.error('Error during checkout');
+  } finally {
+    setIsDialogOpen(false);
+    setSelectedOwnerForCheckout(null);
+  }
+};
+
+  const checkoutOwner = (owner: CarOwner) => {
+  setSelectedOwnerForCheckout(owner);
+  setIsDialogOpen(true);
+};
+
+  // --------------------------------------------------------------------------------------------------------------------------------------
+
 
   const getDuration = (checkIn: string): string => {
     const diffMs = new Date().getTime() - new Date(checkIn).getTime();
@@ -104,9 +139,9 @@ export default function CarsPage() {
     setSelectedOwner(null);
   };
 
-  const filteredOwners = carOwners.filter(o =>
-    o.number_plate.toLowerCase().includes(search.toLowerCase())
-  );
+ const filteredOwners = carOwners
+  .filter(o => !o.checked_out) // hide checked-out entries -- Added by Ruth
+  .filter(o => o.number_plate.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 sm:p-8 text-xs sm:text-sm md:text-base">
@@ -119,7 +154,7 @@ export default function CarsPage() {
           placeholder="Search by plate"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="border p-2 rounded w-full sm:w-auto"
+          className="border border-black text-black p-2 rounded w-full sm:w-auto"
         />
         <button
           onClick={() => {
@@ -173,14 +208,17 @@ export default function CarsPage() {
                   >
                     Update
                   </button>
+
                   {!owner.checked_out && (
-                    <button
-                      onClick={() => checkoutOwner(owner.id)}
-                      className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
-                    >
-                      Checkout
-                    </button>
-                  )}
+                  <button
+                    onClick={() => {
+                      checkoutOwner(owner);
+                    }}
+                    className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                  >
+                    Checkout
+                  </button>
+                )}
                 </td>
               </tr>
             ))}
@@ -191,7 +229,7 @@ export default function CarsPage() {
       <Dialog open={isModalOpen} onClose={closeModal} className="relative z-50">
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg text-sm">
+          <Dialog.Panel className="w-full max-w-md rounded-xl text-black bg-white p-6 shadow-lg text-sm">
             <Dialog.Title className="text-lg font-bold mb-4">
               {selectedOwner?.id ? 'Edit Car Owner' : 'New Car Owner'}
             </Dialog.Title>
@@ -209,7 +247,7 @@ export default function CarsPage() {
                 value={selectedOwner?.phone_number || ''}
                 onChange={e => setSelectedOwner({ ...selectedOwner!, phone_number: e.target.value })} />
               <div className="flex gap-2 justify-end">
-                <button className="bg-green-500 text-white px-4 py-2 rounded" onClick={saveOwner}>
+                <button className="bg-green-600 text-white px-4 py-2 rounded" onClick={saveOwner}>
                   Save
                 </button>
                 <button className="bg-gray-400 text-white px-4 py-2 rounded" onClick={closeModal}>
@@ -220,6 +258,37 @@ export default function CarsPage() {
           </Dialog.Panel>
         </div>
       </Dialog>
+
+      <Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)} className="fixed z-50 inset-0 overflow-y-auto">
+        <div className="flex items-center justify-center min-h-screen px-4">
+        <Dialog.Panel className="bg-white p-6 rounded shadow-md max-w-md w-full">
+          <Dialog.Title className="text-lg text-black font-medium"><strong>Confirm Checkout</strong></Dialog.Title>
+            <Dialog.Description className="mt-2 text-sm text-black">
+                Has <strong>{selectedOwnerForCheckout?.name}</strong> – <strong>{selectedOwnerForCheckout?.number_plate}</strong> paid <strong>{getCost(selectedOwnerForCheckout?.check_in_time || '', false)}</strong>?
+            </Dialog.Description>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                onClick={() => setIsDialogOpen(false)}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={async () => {
+                  if (selectedOwnerForCheckout) {
+                    await confirmCheckout(selectedOwnerForCheckout.id);
+                  }
+                }}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-500"
+              >
+                Yes, Checkout
+              </button>
+
+            </div>
+          </Dialog.Panel>
+        </div>
+    </Dialog>
     </div>
   );
 }
