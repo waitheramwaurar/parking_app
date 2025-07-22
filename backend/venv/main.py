@@ -7,9 +7,9 @@ from schemas import CarOwnerResponse
 from pydantic import BaseModel
 from typing import List
 from models import CarOwner
-from database import SessionLocal, engine
+from database import Base, engine, SessionLocal
 
-# models.Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
