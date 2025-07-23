@@ -49,6 +49,10 @@ class CarOwnerOut(BaseModel):
         orm_mode = True
 
 # CRUD endpoints
+@app.get("/")
+def root():
+    return {"message": "Hello, world! API is live 🚀"}
+
 @app.post("/car-owners/", response_model=CarOwnerOut)
 def create_car_owner(car_owner: CarOwnerCreate, db: Session = Depends(get_db)):
     db_car_owner = CarOwner(
