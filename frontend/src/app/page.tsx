@@ -43,7 +43,7 @@ export default function CarsPage() {
       const url = isNew
         // ? 'http://127.0.0.1:8000/car-owners/'
         // : `http://127.0.0.1:8000/car-owners/${selectedOwner?.id}/`;
-        ? 'hhttps://parkingapp-production-1068.up.railway.app/car-owners/'
+        ? 'https://parkingapp-production-1068.up.railway.app/car-owners/'
         : `https://parkingapp-production-1068.up.railway.app/${selectedOwner?.id}/`;
 
       const method = isNew ? 'POST' : 'PUT';
@@ -75,7 +75,7 @@ export default function CarsPage() {
 
   const confirmCheckout = async (id: string) => {
   try {
-    const res = await fetch(`hhttps://parkingapp-production-1068.up.railway.app/car-owners/${id}/checkout`, {
+    const res = await fetch(`https://parkingapp-production-1068.up.railway.app/car-owners/${id}/checkout`, {
       method: 'PATCH',
     });
     if (res.ok) {
