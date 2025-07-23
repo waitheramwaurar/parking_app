@@ -28,7 +28,8 @@ export default function CarsPage() {
 
   const fetchCarOwners = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:8000/car-owners/');
+      // const res = await fetch('http://127.0.0.1:8000/car-owners/');
+      const res = await fetch('https://parkingapp-production-1068.up.railway.app/car-owners/');
       const data = await res.json();
       setCarOwners(data);
     } catch (error) {
@@ -40,8 +41,10 @@ export default function CarsPage() {
     try {
       const isNew = selectedOwner?.id === '';
       const url = isNew
-        ? 'http://127.0.0.1:8000/car-owners/'
-        : `http://127.0.0.1:8000/car-owners/${selectedOwner?.id}/`;
+        // ? 'http://127.0.0.1:8000/car-owners/'
+        // : `http://127.0.0.1:8000/car-owners/${selectedOwner?.id}/`;
+        ? 'hhttps://parkingapp-production-1068.up.railway.app/car-owners/'
+        : `https://parkingapp-production-1068.up.railway.app/${selectedOwner?.id}/`;
 
       const method = isNew ? 'POST' : 'PUT';
 
@@ -63,23 +66,6 @@ export default function CarsPage() {
     }
   };
 
-  // const checkoutOwner = async (id: string) => {
-  //   try {
-  //     const res = await fetch(`http://127.0.0.1:8000/car-owners/${id}/checkout`, {
-  //       method: 'PATCH',
-  //     });
-  //     if (res.ok) {
-  //       toast.success('Checked out successfully');
-  //       fetchCarOwners();
-  //     } else {
-  //       toast.error('Checkout failed');
-  //     }
-  //   } catch {
-  //     toast.error('Error during checkout');
-  //   }
-  // };
-
-
   // ----------------------------------------------------------------------------------------------------------------------------------
   // Modal confirmation
   // Added by Ruth - confirmation before checkout
@@ -89,7 +75,7 @@ export default function CarsPage() {
 
   const confirmCheckout = async (id: string) => {
   try {
-    const res = await fetch(`http://127.0.0.1:8000/car-owners/${id}/checkout`, {
+    const res = await fetch(`hhttps://parkingapp-production-1068.up.railway.app/car-owners/${id}/checkout`, {
       method: 'PATCH',
     });
     if (res.ok) {

@@ -1,7 +1,7 @@
 // utils/api.js
 
 export async function addCarOwner(data) {
-    const response = await fetch('http://127.0.0.1:8000/car-owners/', {
+    const response = await fetch('https://parkingapp-production-1068.up.railway.app/car-owners/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -17,7 +17,7 @@ export async function addCarOwner(data) {
   }
   
   export async function showAllCars() {
-    const response = await fetch('http://127.0.0.1:8000/car-owners/');
+    const response = await fetch('https://parkingapp-production-1068.up.railway.app/car-owners/');
   
     if (!response.ok) {
       throw new Error('Failed to fetch car owners');
