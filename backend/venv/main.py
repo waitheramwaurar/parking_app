@@ -123,3 +123,7 @@ def checkout_car_owner(car_owner_id: str, db: Session = Depends(get_db)):
     db.refresh(car_owner)
     
     return {"message": "Car checked out"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)
