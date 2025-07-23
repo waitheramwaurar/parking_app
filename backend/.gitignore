@@ -1,5 +1,6 @@
 venv/
-.env
+venv_backup/
+*.env
 
 __pycache__/
 *.pyc
